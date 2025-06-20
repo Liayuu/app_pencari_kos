@@ -1,6 +1,24 @@
 # 🏠 Boss Kost - Aplikasi Pencarian Kos-Kosan
 
+[![Flutter](https://img.shields.io/badge/Flutter-3.8.1+-02569B?style=flat-square&logo=flutter)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.0+-0175C2?style=flat-square&logo=dart)](https://dart.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![GitHub issues](https://img.shields.io/github/issues/Liayuu/app_pencari_kos?style=flat-square)](https://github.com/Liayuu/app_pencari_kos/issues)
+[![GitHub stars](https://img.shields.io/github/stars/Liayuu/app_pencari_kos?style=flat-square)](https://github.com/Liayuu/app_pencari_kos/stargazers)
+
 Aplikasi mobile untuk mencari kos-kosan terdekat dengan fitur peta interaktif, filter pencarian, dan informasi lengkap tentang fasilitas, harga, serta jarak ke kampus.
+
+## 📋 Daftar Isi
+
+- [📱 Apa itu Boss Kost?](#-apa-itu-boss-kost)
+- [🎯 Mengapa Boss Kost?](#-mengapa-boss-kost)
+- [⚡ Fungsi dan Fitur Utama](#-fungsi-dan-fitur-utama)
+- [🚀 Cara Menjalankan Aplikasi](#-cara-menjalankan-aplikasi)
+- [📁 Struktur Proyek](#-struktur-proyek)
+- [🎨 Screenshot](#-screenshot)
+- [🔧 Konfigurasi Tambahan](#-konfigurasi-tambahan)
+- [🤝 Kontribusi](#-kontribusi)
+- [📄 Lisensi](#-lisensi)
 
 📱 Apa itu Boss Kost?
 
@@ -138,13 +156,25 @@ lib/
 │   ├── search_screen.dart   # Layar pencarian
 │   ├── map_screen.dart      # Layar peta
 │   ├── kos_detail_screen.dart # Detail kos
-│   └── ...
+│   ├── notification_screen.dart # Layar notifikasi
+│   ├── profile_screen.dart  # Layar profil
+│   └── search_form_screen.dart # Form pencarian
 ├── widgets/                  # Custom widgets
 │   ├── kos_card.dart        # Card untuk tampilan kos
 │   └── custom_drawer.dart   # Sidebar menu
 └── services/                 # Service layer
-    ├── api_service.dart     # Integrasi API    └── location_service.dart # Service GPS
+    ├── api_service.dart     # Integrasi API
+    └── location_service.dart # Service GPS
 ```
+
+## 🛠️ Teknologi yang Digunakan
+
+- **Flutter** - Framework UI cross-platform
+- **Dart** - Bahasa pemrograman
+- **Google Maps** - Integrasi peta dan lokasi
+- **HTTP** - Network requests
+- **Geolocator** - Location services
+- **Material Design** - Design system
 
 🎨 Screenshot
 
@@ -164,6 +194,28 @@ Aplikasi saat ini menggunakan data sample. Untuk menghubungkan dengan API:
 2. Sesuaikan model data jika diperlukan
 3. Implementasikan authentication jika diperlukan
 
+## 🔍 Troubleshooting
+
+### ❓ Error saat menjalankan `flutter pub get`
+```bash
+flutter clean
+flutter pub get
+```
+
+### ❓ Aplikasi tidak bisa build
+Pastikan Flutter SDK sudah terinstall dengan benar:
+```bash
+flutter doctor
+```
+
+### ❓ Permission error di Android
+Tambahkan permission di `android/app/src/main/AndroidManifest.xml`:
+```xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.INTERNET" />
+```
+
 🤝 Kontribusi
 
 Kontribusi sangat diterima! Silakan:
@@ -177,5 +229,13 @@ Kontribusi sangat diterima! Silakan:
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
+## 📞 Kontak
+
+- **GitHub:** [@Liayuu](https://github.com/Liayuu)
+- **Email:** your.email@example.com
+- **Project Link:** [https://github.com/Liayuu/app_pencari_kos](https://github.com/Liayuu/app_pencari_kos)
+
 ---
+
+⭐ **Jika project ini membantu Anda, jangan lupa berikan star!** ⭐
 
