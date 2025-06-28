@@ -38,12 +38,16 @@ class Kos {
       longitude: (json['longitude'] ?? 0.0).toDouble(),
       price: json['price'] ?? 0,
       description: json['description'] ?? '',
-      facilities: List<String>.from(json['facilities'] ?? []),
-      images: List<String>.from(json['images'] ?? []),
+      facilities: json['facilities'] is String
+          ? (json['facilities'] as String).split(',')
+          : List<String>.from(json['facilities'] ?? []),
+      images: json['images'] is String
+          ? (json['images'] as String).split(',')
+          : List<String>.from(json['images'] ?? []),
       rating: (json['rating'] ?? 0.0).toDouble(),
       distanceToUniversity: (json['distanceToUniversity'] ?? 0.0).toDouble(),
       type: json['type'] ?? '',
-      isAvailable: json['isAvailable'] ?? true,
+      isAvailable: json['isAvailable'] == 1 || json['isAvailable'] == true,
     );
   }
 
@@ -56,12 +60,12 @@ class Kos {
       'longitude': longitude,
       'price': price,
       'description': description,
-      'facilities': facilities,
-      'images': images,
+      'facilities': facilities.join(','),
+      'images': images.join(','),
       'rating': rating,
       'distanceToUniversity': distanceToUniversity,
       'type': type,
-      'isAvailable': isAvailable,
+      'isAvailable': isAvailable ? 1 : 0,
     };
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../controllers/user_controller.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -8,10 +10,35 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _nameController = TextEditingController(text: 'John Doe');
-  final _emailController = TextEditingController(text: 'john.doe@email.com');
-  final _phoneController = TextEditingController(text: '+62 812 3456 7890');
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
   bool _isEditing = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Inisialisasi controller setelah provider tersedia
+    if (_nameController.text.isEmpty) {
+      final userController = Provider.of<UserController>(
+        context,
+        listen: false,
+      );
+      _nameController.text = userController.name;
+      _emailController.text = userController.email;
+      _phoneController.text = userController.phone;
+    }
+  }
 
   @override
   void dispose() {
@@ -21,234 +48,445 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userController = Provider.of<UserController>(
+        context,
+        listen: false,
+      );
+
+      // Validate data before saving
+      if (!userController.validateProfileData()) {
+        throw Exception('Data profil tidak valid');
+      }
+
+      // Update data in controller
+      userController.updateName(_nameController.text.trim());
+      userController.updateEmail(_emailController.text.trim().toLowerCase());
+      userController.updatePhone(_phoneController.text.trim());
+
+      // Save to API/Database
+      bool success = await userController.saveProfile();
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Profil berhasil disimpan!'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        setState(() {
+          _isEditing = false;
+        });
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Gagal menyimpan profil. Coba lagi.'),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: $e')),
+              ],
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _changeProfilePhoto() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Pilih dari Galeri'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Fitur galeri akan segera tersedia'),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Ambil Foto'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Fitur kamera akan segera tersedia'),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _isEditing = !_isEditing;
-              });
-              if (!_isEditing) {
-                _saveProfile();
-              }
-            },
-            child: Text(
-              _isEditing ? 'Simpan' : 'Edit',
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Profile Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1976D2), Color(0xFF42A5F5)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+    return Consumer<UserController>(
+      builder: (context, userController, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Profil'),
+            backgroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Colors.white,
+            actions: [
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                )
+              else
+                TextButton(
+                  onPressed: () {
+                    if (_isEditing) {
+                      _saveProfile();
+                    } else {
+                      setState(() {
+                        _isEditing = true;
+                      });
+                    }
+                  },
+                  child: Text(
+                    _isEditing ? 'Simpan' : 'Edit',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
-              ),
+            ],
+          ),
+          body: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
               child: Column(
                 children: [
-                  Stack(
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
-                          image: const DecorationImage(
-                            image: AssetImage('assets/images/profile.jpg'),
-                            fit: BoxFit.cover,
-                            onError: null,
+                  // Profile Header
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).primaryColor,
+                          Theme.of(context).primaryColor.withOpacity(0.8),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Stack(
+                          children: [
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 4,
+                                ),
+                                color: Colors.white.withOpacity(0.3),
+                              ),
+                              child: userController.profileImagePath.isNotEmpty
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(50),
+                                      child: Image.asset(
+                                        userController.profileImagePath,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return const Icon(
+                                                Icons.person,
+                                                size: 50,
+                                                color: Colors.white,
+                                              );
+                                            },
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person,
+                                      size: 50,
+                                      color: Colors.white,
+                                    ),
+                            ),
+                            if (_isEditing)
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: GestureDetector(
+                                  onTap: _changeProfilePhoto,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.blue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          userController.name,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
-                        child: const Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Colors.white,
+                        const SizedBox(height: 4),
+                        Text(
+                          userController.email,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.white70,
+                          ),
                         ),
-                      ),
-                      if (_isEditing)
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildStatItem(
+                              'Bookmark',
+                              userController.favoriteCount.toString(),
                             ),
-                            child: InkWell(
-                              onTap: _changeProfilePhoto,
-                              child: const Icon(
-                                Icons.camera_alt,
-                                size: 20,
-                                color: Color(0xFF1976D2),
+                            _buildStatItem(
+                              'Booking',
+                              userController.bookingCount.toString(),
+                            ),
+                            _buildStatItem('Poin', '1,250'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Profile Information
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Informasi Pribadi',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Name Field
+                        _buildProfileField(
+                          'Nama Lengkap',
+                          _nameController,
+                          Icons.person,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Email Field
+                        _buildProfileField(
+                          'Email',
+                          _emailController,
+                          Icons.email,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Phone Field
+                        _buildProfileField(
+                          'Nomor Telepon',
+                          _phoneController,
+                          Icons.phone,
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Statistics Cards
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatCard(
+                                userController.favoriteCount.toString(),
+                                'Kos Disimpan',
+                                Icons.bookmark,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildStatCard(
+                                userController.bookingCount.toString(),
+                                'Booking Aktif',
+                                Icons.home,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Menu Items
+                        const Text(
+                          'Pengaturan',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        _buildMenuItem(
+                          Icons.history,
+                          'Riwayat Booking',
+                          'Lihat riwayat booking kos',
+                          () => _showComingSoon('Riwayat Booking'),
+                        ),
+                        _buildMenuItem(
+                          Icons.bookmark,
+                          'Kos Bookmark',
+                          'Kos yang Anda bookmark',
+                          () => _showComingSoon('Kos Bookmark'),
+                        ),
+                        _buildMenuItem(
+                          Icons.payment,
+                          'Metode Pembayaran',
+                          'Kelola metode pembayaran',
+                          () => _showComingSoon('Metode Pembayaran'),
+                        ),
+                        _buildMenuItem(
+                          Icons.notifications,
+                          'Notifikasi',
+                          'Pengaturan notifikasi',
+                          () => _showComingSoon('Pengaturan Notifikasi'),
+                        ),
+                        _buildMenuItem(
+                          Icons.security,
+                          'Keamanan',
+                          'Ubah password dan keamanan',
+                          () => _showComingSoon('Keamanan'),
+                        ),
+                        _buildMenuItem(
+                          Icons.help,
+                          'Bantuan',
+                          'FAQ dan dukungan pelanggan',
+                          () => _showAboutDialog(),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Logout Button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _showLogoutDialog,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: const Text(
+                              'Keluar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _nameController.text,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+
+                        const SizedBox(height: 32),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _emailController.text,
-                    style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                 ],
               ),
             ),
+          ),
+        );
+      },
+    );
+  }
 
-            // Profile Information
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Informasi Pribadi',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Name Field
-                  _buildProfileField(
-                    'Nama Lengkap',
-                    _nameController,
-                    Icons.person,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Email Field
-                  _buildProfileField('Email', _emailController, Icons.email),
-                  const SizedBox(height: 16),
-
-                  // Phone Field
-                  _buildProfileField(
-                    'Nomor Telepon',
-                    _phoneController,
-                    Icons.phone,
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Statistics Cards
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          '3',
-                          'Kos Disimpan',
-                          Icons.bookmark,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildStatCard('1', 'Booking Aktif', Icons.home),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Menu Items
-                  const Text(
-                    'Pengaturan',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-
-                  _buildMenuItem(
-                    Icons.history,
-                    'Riwayat Booking',
-                    'Lihat riwayat booking kos',
-                    () => _navigateToHistory(),
-                  ),
-                  _buildMenuItem(
-                    Icons.favorite,
-                    'Kos Favorit',
-                    'Kos yang Anda sukai',
-                    () => _navigateToFavorites(),
-                  ),
-                  _buildMenuItem(
-                    Icons.payment,
-                    'Metode Pembayaran',
-                    'Kelola metode pembayaran',
-                    () => _navigateToPayment(),
-                  ),
-                  _buildMenuItem(
-                    Icons.notifications,
-                    'Notifikasi',
-                    'Pengaturan notifikasi',
-                    () => _navigateToNotificationSettings(),
-                  ),
-                  _buildMenuItem(
-                    Icons.security,
-                    'Keamanan',
-                    'Ubah password dan keamanan',
-                    () => _navigateToSecurity(),
-                  ),
-                  _buildMenuItem(
-                    Icons.help,
-                    'Bantuan',
-                    'FAQ dan dukungan pelanggan',
-                    () => _navigateToHelp(),
-                  ),
-                  _buildMenuItem(
-                    Icons.info,
-                    'Tentang Aplikasi',
-                    'Versi dan informasi aplikasi',
-                    () => _showAboutDialog(),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _showLogoutDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      child: const Text(
-                        'Keluar',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
-          ],
+  Widget _buildStatItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-      ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: Colors.white70),
+        ),
+      ],
     );
   }
 
@@ -272,6 +510,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
         TextFormField(
           controller: controller,
           enabled: _isEditing,
+          keyboardType: label == 'Email'
+              ? TextInputType.emailAddress
+              : label == 'Nomor Telepon'
+              ? TextInputType.phone
+              : TextInputType.text,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return '$label tidak boleh kosong';
+            }
+            if (label == 'Email' && !value.contains('@')) {
+              return 'Format email tidak valid';
+            }
+            if (label == 'Nomor Telepon') {
+              // Remove all non-digit characters for validation
+              String digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+              if (digits.length < 10 || digits.length > 15) {
+                return 'Nomor telepon harus 10-15 digit';
+              }
+            }
+            return null;
+          },
           decoration: InputDecoration(
             prefixIcon: Icon(icon),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -299,14 +558,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          Icon(icon, size: 32, color: const Color(0xFF1976D2)),
+          Icon(icon, size: 32, color: Theme.of(context).primaryColor),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1976D2),
+              color: Theme.of(context).primaryColor,
             ),
           ),
           const SizedBox(height: 4),
@@ -332,10 +591,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF1976D2).withOpacity(0.1),
+            color: Theme.of(context).primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: const Color(0xFF1976D2)),
+          child: Icon(icon, color: Theme.of(context).primaryColor),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
         subtitle: Text(
@@ -348,79 +607,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _changeProfilePhoto() {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Pilih dari Galeri'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  // Implement gallery picker
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text('Ambil Foto'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  // Implement camera
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void _saveProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profil berhasil disimpan'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _navigateToHistory() {
+  void _showComingSoon(String feature) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('Membuka riwayat booking')));
-  }
-
-  void _navigateToFavorites() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Membuka kos favorit')));
-  }
-
-  void _navigateToPayment() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Membuka metode pembayaran')));
-  }
-
-  void _navigateToNotificationSettings() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Membuka pengaturan notifikasi')),
-    );
-  }
-
-  void _navigateToSecurity() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Membuka pengaturan keamanan')),
-    );
-  }
-
-  void _navigateToHelp() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Membuka bantuan')));
+    ).showSnackBar(SnackBar(content: Text('$feature akan segera tersedia')));
   }
 
   void _showAboutDialog() {
@@ -428,15 +618,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       applicationName: 'Boss Kost',
       applicationVersion: '1.0.0',
-      applicationIcon: const Icon(
+      applicationIcon: Icon(
         Icons.home,
         size: 50,
-        color: Color(0xFF1976D2),
+        color: Theme.of(context).primaryColor,
       ),
-      children: [
-        const Text(
-          'Aplikasi pencarian kos terbaik untuk mahasiswa dan pekerja.',
-        ),
+      children: const [
+        Text('Aplikasi pencarian kos terbaik untuk mahasiswa dan pekerja.'),
       ],
     );
   }
@@ -458,7 +646,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // Implement logout logic
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Berhasil keluar'),
@@ -467,7 +654,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 );
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Keluar'),
+              child: const Text(
+                'Keluar',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );

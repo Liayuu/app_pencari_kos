@@ -1,178 +1,149 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/kos.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://api.bosskost.com/v1';
+  static const String baseUrl =
+      'https://api.bosskost.com'; // Replace with actual API URL
 
-  // Simulate API call for searching kos
-  static Future<List<Kos>> searchKos({
-    String? location,
-    String? type,
-    double? maxPrice,
-    double? maxDistance,
-    List<String>? facilities,
-  }) async {
+  // Get all kos
+  Future<List<Kos>> getAllKos() async {
     try {
+      // For now, return sample data
+      // In real implementation, make HTTP request:
+      // final response = await http.get(Uri.parse('$baseUrl/kos'));
+      // if (response.statusCode == 200) {
+      //   List<dynamic> data = json.decode(response.body);
+      //   return data.map((json) => Kos.fromJson(json)).toList();
+      // } else {
+      //   throw Exception('Failed to load kos data');
+      // }
+
       // Simulate network delay
       await Future.delayed(const Duration(seconds: 1));
-
-      // In real implementation, make HTTP request here
-      // final response = await http.get(
-      //   Uri.parse('$baseUrl/kos/search'),
-      //   headers: {'Content-Type': 'application/json'},
-      // );
-
-      // For now, return sample data with filtering
-      List<Kos> results = List.from(sampleKosData);
-
-      // Apply filters
-      if (type != null && type != 'Semua') {
-        results = results.where((kos) => kos.type == type).toList();
-      }
-
-      if (maxPrice != null) {
-        results = results.where((kos) => kos.price <= maxPrice).toList();
-      }
-
-      if (maxDistance != null) {
-        results = results
-            .where((kos) => kos.distanceToUniversity <= maxDistance)
-            .toList();
-      }
-
-      if (facilities != null && facilities.isNotEmpty) {
-        results = results.where((kos) {
-          return facilities.every(
-            (facility) => kos.facilities.contains(facility),
-          );
-        }).toList();
-      }
-
-      if (location != null && location.isNotEmpty) {
-        results = results.where((kos) {
-          return kos.address.toLowerCase().contains(location.toLowerCase()) ||
-              kos.name.toLowerCase().contains(location.toLowerCase());
-        }).toList();
-      }
-
-      return results;
+      return sampleKosData;
     } catch (e) {
-      throw Exception('Failed to search kos: $e');
+      throw Exception('Failed to fetch kos data: $e');
     }
   }
 
   // Get kos by ID
-  static Future<Kos?> getKosById(String id) async {
+  Future<Kos> getKosById(String id) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // In real implementation:
       // final response = await http.get(Uri.parse('$baseUrl/kos/$id'));
+      // if (response.statusCode == 200) {
+      //   Map<String, dynamic> data = json.decode(response.body);
+      //   return Kos.fromJson(data);
+      // } else {
+      //   throw Exception('Kos not found');
+      // }
 
-      return sampleKosData.firstWhere(
-        (kos) => kos.id == id,
-        orElse: () => throw Exception('Kos not found'),
-      );
+      await Future.delayed(const Duration(milliseconds: 500));
+      final kos = sampleKosData.firstWhere((k) => k.id == id);
+      return kos;
     } catch (e) {
-      throw Exception('Failed to get kos: $e');
+      throw Exception('Failed to fetch kos details: $e');
     }
   }
 
-  // Get nearby kos based on location
-  static Future<List<Kos>> getNearbyKos(
-    double latitude,
-    double longitude, {
-    double radius = 5.0,
-  }) async {
+  // Search kos
+  Future<List<Kos>> searchKos(Map<String, dynamic> searchParams) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      // In real implementation:
       // final response = await http.post(
-      //   Uri.parse('$baseUrl/kos/nearby'),
-      //   body: jsonEncode({
-      //     'latitude': latitude,
-      //     'longitude': longitude,
-      //     'radius': radius,
-      //   }),
+      //   Uri.parse('$baseUrl/kos/search'),
       //   headers: {'Content-Type': 'application/json'},
+      //   body: json.encode(searchParams),
       // );
+      // if (response.statusCode == 200) {
+      //   List<dynamic> data = json.decode(response.body);
+      //   return data.map((json) => Kos.fromJson(json)).toList();
+      // } else {
+      //   throw Exception('Search failed');
+      // }
 
-      // For simulation, return all sample data
-      return sampleKosData;
+      await Future.delayed(const Duration(seconds: 1));
+      return sampleKosData; // Return filtered results in real implementation
     } catch (e) {
-      throw Exception('Failed to get nearby kos: $e');
+      throw Exception('Search failed: $e');
     }
   }
 
-  // Book a kos
-  static Future<bool> bookKos(
-    String kosId,
-    Map<String, dynamic> bookingData,
-  ) async {
+  // Book kos
+  Future<bool> bookKos(String kosId, Map<String, dynamic> bookingData) async {
     try {
-      await Future.delayed(const Duration(seconds: 2));
-
-      // In real implementation:
       // final response = await http.post(
       //   Uri.parse('$baseUrl/bookings'),
-      //   body: jsonEncode({
+      //   headers: {'Content-Type': 'application/json'},
+      //   body: json.encode({
       //     'kosId': kosId,
       //     ...bookingData,
       //   }),
-      //   headers: {'Content-Type': 'application/json'},
       // );
+      // return response.statusCode == 201;
 
-      // Simulate successful booking
-      return true;
+      await Future.delayed(const Duration(seconds: 2));
+      return true; // Simulate successful booking
     } catch (e) {
-      throw Exception('Failed to book kos: $e');
+      throw Exception('Booking failed: $e');
     }
   }
 
-  // Get user's bookings
-  static Future<List<Map<String, dynamic>>> getUserBookings(
-    String userId,
-  ) async {
+  // Get user bookings
+  Future<List<Map<String, dynamic>>> getUserBookings(String userId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 600));
+      // final response = await http.get(Uri.parse('$baseUrl/users/$userId/bookings'));
+      // if (response.statusCode == 200) {
+      //   return List<Map<String, dynamic>>.from(json.decode(response.body));
+      // } else {
+      //   throw Exception('Failed to load bookings');
+      // }
 
-      // Return sample booking data
-      return [
-        {
-          'id': '1',
-          'kosId': '1',
-          'kosName': 'Kos Melati',
-          'status': 'confirmed',
-          'bookingDate': DateTime.now().subtract(const Duration(days: 5)),
-          'startDate': DateTime.now().add(const Duration(days: 25)),
-          'duration': 12, // months
-        },
-      ];
+      await Future.delayed(const Duration(milliseconds: 800));
+      return []; // Return user bookings in real implementation
     } catch (e) {
-      throw Exception('Failed to get bookings: $e');
+      throw Exception('Failed to fetch bookings: $e');
     }
   }
 
-  // Send message to kos owner
-  static Future<bool> sendMessage(String kosId, String message) async {
+  // Update user profile
+  Future<bool> updateUserProfile(Map<String, dynamic> profileData) async {
     try {
+      // final response = await http.put(
+      //   Uri.parse('$baseUrl/users/profile'),
+      //   headers: {'Content-Type': 'application/json'},
+      //   body: json.encode(profileData),
+      // );
+      // return response.statusCode == 200;
+
       await Future.delayed(const Duration(seconds: 1));
-
-      // In real implementation:
-      // final response = await http.post(
-      //   Uri.parse('$baseUrl/messages'),
-      //   body: jsonEncode({
-      //     'kosId': kosId,
-      //     'message': message,
-      //   }),
-      //   headers: {'Content-Type': 'application/json'},
-      // );
-
-      return true;
+      return true; // Simulate successful update
     } catch (e) {
-      throw Exception('Failed to send message: $e');
+      throw Exception('Profile update failed: $e');
+    }
+  }
+
+  // Login
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      // final response = await http.post(
+      //   Uri.parse('$baseUrl/auth/login'),
+      //   headers: {'Content-Type': 'application/json'},
+      //   body: json.encode({
+      //     'email': email,
+      //     'password': password,
+      //   }),
+      // );
+      // if (response.statusCode == 200) {
+      //   return json.decode(response.body);
+      // } else {
+      //   throw Exception('Login failed');
+      // }
+
+      await Future.delayed(const Duration(seconds: 2));
+      return {
+        'token': 'sample_token',
+        'user': {'id': '1', 'name': 'John Doe', 'email': email},
+      };
+    } catch (e) {
+      throw Exception('Login failed: $e');
     }
   }
 }

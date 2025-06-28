@@ -14,7 +14,7 @@ class _SearchFormScreenState extends State<SearchFormScreen> {
   final _maxDistanceController = TextEditingController();
 
   String _selectedType = 'Semua';
-  List<String> _selectedFacilities = [];
+  final List<String> _selectedFacilities = [];
   double _maxPrice = 2000000;
   double _maxDistance = 5.0;
 

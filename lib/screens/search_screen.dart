@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/kos.dart';
+import 'package:provider/provider.dart';
+import '../controllers/kos_controller.dart';
 import '../widgets/kos_card.dart';
 import 'search_form_screen.dart';
 import 'kos_detail_screen.dart';
@@ -13,7 +14,6 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  List<Kos> _filteredKos = sampleKosData;
   String _selectedFilter = 'Semua';
   final List<String> _filterOptions = ['Semua', 'Putra', 'Putri', 'Campur'];
   RangeValues _priceRange = const RangeValues(500000, 2000000);
@@ -32,29 +32,21 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _onSearchChanged() {
-    _filterKos();
+    final kosController = Provider.of<KosController>(context, listen: false);
+    _applyFilters(kosController);
   }
 
-  void _filterKos() {
-    setState(() {
-      _filteredKos = sampleKosData.where((kos) {
-        final matchesSearch =
-            kos.name.toLowerCase().contains(
-              _searchController.text.toLowerCase(),
-            ) ||
-            kos.address.toLowerCase().contains(
-              _searchController.text.toLowerCase(),
-            );
+  void _applyFilters(KosController kosController) {
+    // Start with search
+    kosController.searchKos(_searchController.text);
 
-        final matchesType =
-            _selectedFilter == 'Semua' || kos.type == _selectedFilter;
+    // Apply type filter
+    if (_selectedFilter != 'Semua') {
+      kosController.filterByType(_selectedFilter);
+    }
 
-        final matchesPrice =
-            kos.price >= _priceRange.start && kos.price <= _priceRange.end;
-
-        return matchesSearch && matchesType && matchesPrice;
-      }).toList();
-    });
+    // Apply price range filter
+    kosController.filterByPriceRange(_priceRange.start, _priceRange.end);
   }
 
   void _showFilterDialog() {
@@ -129,7 +121,11 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    _filterKos();
+                    final kosController = Provider.of<KosController>(
+                      context,
+                      listen: false,
+                    );
+                    _applyFilters(kosController);
                     Navigator.of(context).pop();
                   },
                   child: const Text('Terapkan'),
@@ -250,113 +246,121 @@ class _SearchScreenState extends State<SearchScreen> {
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Consumer<KosController>(
+                builder: (context, kosController, child) {
+                  final filteredKos = kosController.filteredKos;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Ditemukan ${_filteredKos.length} kos',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      DropdownButton<String>(
-                        value: 'Relevan',
-                        items: const [
-                          DropdownMenuItem(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Ditemukan ${filteredKos.length} kos',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          DropdownButton<String>(
                             value: 'Relevan',
-                            child: Text('Relevan'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Terdekat',
-                            child: Text('Terdekat'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Termurah',
-                            child: Text('Termurah'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Termahal',
-                            child: Text('Termahal'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'Rating',
-                            child: Text('Rating Tertinggi'),
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'Relevan',
+                                child: Text('Relevan'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Terdekat',
+                                child: Text('Terdekat'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Termurah',
+                                child: Text('Termurah'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Termahal',
+                                child: Text('Termahal'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Rating',
+                                child: Text('Rating Tertinggi'),
+                              ),
+                            ],
+                            onChanged: (value) {
+                              if (value != null) {
+                                kosController.sortKos(value);
+                              }
+                            },
+                            underline: Container(),
+                            style: const TextStyle(
+                              color: Color(0xFF1976D2),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
-                        onChanged: (value) {
-                          // Implement sorting logic here
-                        },
-                        underline: Container(),
-                        style: const TextStyle(
-                          color: Color(0xFF1976D2),
-                          fontWeight: FontWeight.w500,
-                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Kos List
+                      Expanded(
+                        child: filteredKos.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.search_off,
+                                      size: 80,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Tidak ada kos yang ditemukan',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Coba ubah kata kunci atau filter pencarian',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: filteredKos.length,
+                                itemBuilder: (context, index) {
+                                  final kos = filteredKos[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: KosCard(
+                                      kos: kos,
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                KosDetailScreen(kos: kos),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Kos List
-                  Expanded(
-                    child: _filteredKos.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.search_off,
-                                  size: 80,
-                                  color: Colors.grey.shade400,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Tidak ada kos yang ditemukan',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Coba ubah kata kunci atau filter pencarian',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _filteredKos.length,
-                            itemBuilder: (context, index) {
-                              final kos = _filteredKos[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: KosCard(
-                                  kos: kos,
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            KosDetailScreen(kos: kos),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ),
