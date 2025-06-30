@@ -263,7 +263,7 @@ class _SearchFormScreenState extends State<SearchFormScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
+              color: safeOpacity(Colors.grey, 0.3),
               spreadRadius: 1,
               blurRadius: 5,
               offset: const Offset(0, -2),
@@ -368,4 +368,11 @@ class _SearchFormScreenState extends State<SearchFormScreen> {
       );
     });
   }
+}
+
+Color safeOpacity(Color color, double opacity) {
+  if (opacity.isNaN) opacity = 1.0;
+  if (opacity < 0.0) opacity = 0.0;
+  if (opacity > 1.0) opacity = 1.0;
+  return color.withOpacity(opacity);
 }

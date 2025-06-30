@@ -82,13 +82,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                   gradient: LinearGradient(
                     colors: [
                       Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withOpacity(0.8),
+                      safeOpacity(Theme.of(context).primaryColor, 0.8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: safeOpacity(Colors.black, 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -933,5 +933,12 @@ class _SettingsScreenState extends State<SettingsScreen>
         );
       },
     );
+  }
+
+  Color safeOpacity(Color color, double opacity) {
+    if (opacity.isNaN) opacity = 1.0;
+    if (opacity < 0.0) opacity = 0.0;
+    if (opacity > 1.0) opacity = 1.0;
+    return color.withOpacity(opacity);
   }
 }

@@ -224,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       gradient: LinearGradient(
                         colors: [
                           Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor.withOpacity(0.8),
+                          _safeOpacity(Theme.of(context).primaryColor, 0.8),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -243,7 +243,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   color: Colors.white,
                                   width: 4,
                                 ),
-                                color: Colors.white.withOpacity(0.3),
+                                color: _safeOpacity(Colors.white, 0.3),
                               ),
                               child: userController.profileImagePath.isNotEmpty
                                   ? ClipRRect(
@@ -550,7 +550,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: _safeOpacity(Colors.grey, 0.1),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -591,7 +591,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            color: _safeOpacity(Theme.of(context).primaryColor, 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: Theme.of(context).primaryColor),
@@ -663,5 +663,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
     );
+  }
+
+  Color _safeOpacity(Color color, double opacity) {
+    if (opacity.isNaN) opacity = 1.0;
+    if (opacity < 0.0) opacity = 0.0;
+    if (opacity > 1.0) opacity = 1.0;
+    return color.withOpacity(opacity);
   }
 }

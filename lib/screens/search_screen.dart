@@ -5,6 +5,13 @@ import '../widgets/kos_card.dart';
 import 'search_form_screen.dart';
 import 'kos_detail_screen.dart';
 
+Color safeOpacity(Color color, double opacity) {
+  if (opacity.isNaN) opacity = 1.0;
+  if (opacity < 0.0) opacity = 0.0;
+  if (opacity > 1.0) opacity = 1.0;
+  return color.withOpacity(opacity);
+}
+
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -83,7 +90,10 @@ class _SearchScreenState extends State<SearchScreen> {
                             _selectedFilter = filter;
                           });
                         },
-                        selectedColor: const Color(0xFF1976D2).withOpacity(0.2),
+                        selectedColor: safeOpacity(
+                          const Color(0xFF1976D2),
+                          0.2,
+                        ),
                         checkmarkColor: const Color(0xFF1976D2),
                       );
                     }).toList(),
@@ -186,7 +196,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: safeOpacity(Colors.black, 0.1),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -375,7 +385,7 @@ class _SearchScreenState extends State<SearchScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        border: Border.all(color: safeOpacity(Colors.white, 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

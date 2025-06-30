@@ -17,7 +17,7 @@ class KosCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
+              color: safeOpacity(Colors.grey, 0.2),
               spreadRadius: 2,
               blurRadius: 8,
               offset: const Offset(0, 3),
@@ -128,7 +128,7 @@ class KosCard extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: safeOpacity(Colors.white, 0.9),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(
@@ -246,10 +246,10 @@ class KosCard extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1976D2).withOpacity(0.1),
+                          color: safeOpacity(const Color(0xFF1976D2), 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF1976D2).withOpacity(0.3),
+                            color: safeOpacity(const Color(0xFF1976D2), 0.3),
                           ),
                         ),
                         child: Text(
@@ -355,4 +355,11 @@ class KosCard extends StatelessWidget {
       return price.toString();
     }
   }
+}
+
+Color safeOpacity(Color color, double opacity) {
+  if (opacity.isNaN) opacity = 1.0;
+  if (opacity < 0.0) opacity = 0.0;
+  if (opacity > 1.0) opacity = 1.0;
+  return color.withOpacity(opacity);
 }

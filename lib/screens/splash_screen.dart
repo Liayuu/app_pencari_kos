@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+Color safeOpacity(Color color, double opacity) {
+  if (opacity.isNaN) opacity = 1.0;
+  if (opacity < 0.0) opacity = 0.0;
+  if (opacity > 1.0) opacity = 1.0;
+  return color.withOpacity(opacity);
+}
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -87,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen>
             end: Alignment.bottomCenter,
             colors: [
               Theme.of(context).primaryColor,
-              Theme.of(context).primaryColor.withOpacity(0.8),
+              safeOpacity(Theme.of(context).primaryColor, 0.8),
             ],
           ),
         ),
@@ -108,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: safeOpacity(Colors.black, 0.3),
                         blurRadius: 30,
                         offset: const Offset(0, 15),
                       ),
@@ -146,7 +153,7 @@ class _SplashScreenState extends State<SplashScreen>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: safeOpacity(Colors.white, 0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
@@ -182,7 +189,7 @@ class _SplashScreenState extends State<SplashScreen>
                             borderRadius: BorderRadius.circular(30),
                           ),
                           elevation: 8,
-                          shadowColor: Colors.black.withOpacity(0.3),
+                          shadowColor: safeOpacity(Colors.black, 0.3),
                         ),
                         child: const Text(
                           'Mulai Mencari Kos',

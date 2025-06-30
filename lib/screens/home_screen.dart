@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
           end: Alignment.bottomRight,
           colors: [
             Theme.of(context).primaryColor,
-            Theme.of(context).primaryColor.withOpacity(0.8),
+            safeOpacity(Theme.of(context).primaryColor, 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: safeOpacity(Colors.white, 0.2),
               borderRadius: BorderRadius.circular(30),
             ),
             child: const Icon(Icons.home, color: Colors.white, size: 30),
@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: safeOpacity(Colors.grey, 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -241,10 +241,10 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: safeOpacity(color, 0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: safeOpacity(Colors.grey, 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -323,4 +323,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
+}
+
+Color safeOpacity(Color color, double opacity) {
+  if (opacity.isNaN) opacity = 1.0;
+  if (opacity < 0.0) opacity = 0.0;
+  if (opacity > 1.0) opacity = 1.0;
+  return color.withOpacity(opacity);
 }
