@@ -24,6 +24,7 @@ class _SearchScreenState extends State<SearchScreen> {
   String _selectedFilter = 'Semua';
   final List<String> _filterOptions = ['Semua', 'Putra', 'Putri', 'Campur'];
   RangeValues _priceRange = const RangeValues(500000, 2000000);
+  List<String> _searchHistory = [];
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _onSearchChanged() {
     final kosController = Provider.of<KosController>(context, listen: false);
+    
     _applyFilters(kosController);
   }
 

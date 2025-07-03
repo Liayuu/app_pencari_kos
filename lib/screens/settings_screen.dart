@@ -29,6 +29,16 @@ class _SettingsScreenState extends State<SettingsScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    // Load preferences from SharedPreferences or default values
+    setState(() {
+      _isDarkMode = false; // default value
+      _isNotificationsEnabled = true; // default value
+      _language = 'Bahasa Indonesia'; // default value
+    });
   }
 
   @override
@@ -316,20 +326,38 @@ class _SettingsScreenState extends State<SettingsScreen>
                 title: const Text('Bahasa Indonesia'),
                 value: 'Bahasa Indonesia',
                 groupValue: _language,
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     _language = value!;
                   });
+                  // Save to SharedPreferences or other storage
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Bahasa diubah ke $value'),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  }
                 },
               ),
               RadioListTile<String>(
                 title: const Text('English'),
                 value: 'English',
                 groupValue: _language,
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     _language = value!;
                   });
+                  // Save to SharedPreferences or other storage
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Language changed to $value'),
+                        duration: const Duration(seconds: 1),
+                      ),
+                    );
+                  }
                 },
               ),
             ],
@@ -343,10 +371,23 @@ class _SettingsScreenState extends State<SettingsScreen>
             title: const Text('Aktifkan Notifikasi'),
             subtitle: const Text('Terima notifikasi untuk update penting'),
             value: _isNotificationsEnabled,
-            onChanged: (value) {
+            onChanged: (value) async {
               setState(() {
                 _isNotificationsEnabled = value;
               });
+              // Save to SharedPreferences or other storage
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      value
+                          ? 'Notifikasi diaktifkan'
+                          : 'Notifikasi dinonaktifkan',
+                    ),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              }
             },
           ),
 

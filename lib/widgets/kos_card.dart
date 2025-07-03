@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/kos.dart';
+import '../controllers/kos_controller.dart';
 
 class KosCard extends StatelessWidget {
   final Kos kos;
@@ -125,17 +127,56 @@ class KosCard extends StatelessWidget {
                 Positioned(
                   bottom: 12,
                   right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: safeOpacity(Colors.white, 0.9),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
-                      Icons.bookmark_border,
-                      color: Color(0xFF1976D2),
-                      size: 20,
-                    ),
+                  child: Consumer<KosController>(
+                    builder: (context, kosController, child) {
+                      final isFavorited = kosController.isFavorite(kos);
+                      return GestureDetector(
+                        onTap: () async {
+                          // Get status before toggle
+                          final wasBookmarked = kosController.isFavorite(kos);
+                          
+                          // Toggle favorite
+                          kosController.toggleFavorite(kos);
+                          
+                          // Wait a bit for state to update
+                          await Future.delayed(const Duration(milliseconds: 100));
+                          
+                          // Show feedback with correct message
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  wasBookmarked
+                                      ? 'Dihapus dari bookmark'
+                                      : 'Ditambahkan ke bookmark',
+                                ),
+                                duration: const Duration(seconds: 1),
+                                backgroundColor: wasBookmarked ? Colors.orange : Colors.green,
+                              ),
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: safeOpacity(Colors.white, 0.9),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            isFavorited ? Icons.bookmark : Icons.bookmark_border,
+                            color: isFavorited ? Colors.red : const Color(0xFF1976D2),
+                            size: 20,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],

@@ -24,6 +24,7 @@ class KosController extends ChangeNotifier {
   void initializeData() {
     _allKos = sampleKosData;
     _filteredKos = _allKos;
+    loadFavorites(); // Load saved favorites from database
     notifyListeners();
   }
 
@@ -91,16 +92,24 @@ class KosController extends ChangeNotifier {
 
   // Favorite management
   void toggleFavorite(Kos kos) async {
-    if (_favoriteKos.any((k) => k.id == kos.id)) {
-      _favoriteKos.removeWhere((k) => k.id == kos.id);
-      // Remove from SQLite
-      await _databaseHelper.removeFavorite(kos.id);
-    } else {
-      _favoriteKos.add(kos);
-      // Add to SQLite
-      await _databaseHelper.addFavorite(kos.id);
+    try {
+      if (_favoriteKos.any((k) => k.id == kos.id)) {
+        _favoriteKos.removeWhere((k) => k.id == kos.id);
+        // Notify immediately for UI update
+        notifyListeners();
+        // Remove from SQLite (background)
+        await _databaseHelper.removeFavorite(kos.id);
+      } else {
+        _favoriteKos.add(kos);
+        // Notify immediately for UI update
+        notifyListeners();
+        // Add to SQLite (background)
+        await _databaseHelper.addFavorite(kos.id);
+      }
+    } catch (e) {
+      debugPrint('Error toggling favorite: $e');
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   // Load favorites from SQLite
@@ -110,10 +119,12 @@ class KosController extends ChangeNotifier {
       _favoriteKos = _allKos
           .where((kos) => favoriteIds.contains(kos.id))
           .toList();
+      
       notifyListeners();
+      debugPrint('Loaded ${_favoriteKos.length} favorites');
     } catch (e) {
       _errorMessage = 'Error loading favorites: $e';
-      notifyListeners();
+      debugPrint('Error loading favorites: $e');
     }
   }
 

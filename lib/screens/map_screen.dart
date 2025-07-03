@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../models/kos.dart';
 import '../controllers/kos_controller.dart';
@@ -16,7 +17,7 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   Kos? _selectedKos;
   Position? _currentPosition;
-  bool _useGoogleMaps = false; // Toggle this to enable Google Maps
+  bool _useGoogleMaps = false; // Disable Google Maps by default (dummy mode)
 
   @override
   void initState() {
@@ -28,6 +29,16 @@ class _MapScreenState extends State<MapScreen> {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Layanan lokasi tidak aktif. Aktifkan GPS untuk fitur yang lebih baik.',
+              ),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
         return;
       }
 
@@ -35,11 +46,31 @@ class _MapScreenState extends State<MapScreen> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Izin lokasi ditolak. Beberapa fitur mungkin tidak berfungsi.',
+                ),
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Izin lokasi ditolak permanen. Buka Settings untuk mengaktifkan.',
+              ),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
         return;
       }
 
@@ -48,9 +79,37 @@ class _MapScreenState extends State<MapScreen> {
         setState(() {
           _currentPosition = position;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lokasi berhasil ditemukan'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       }
     } catch (e) {
-      // Error getting location
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error mendapatkan lokasi: ${e.toString()}'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        // Use default location as fallback
+        setState(() {
+          _currentPosition = Position(
+            latitude: -6.200000,
+            longitude: 106.816666,
+            timestamp: DateTime.now(),
+            accuracy: 0,
+            altitude: 0,
+            altitudeAccuracy: 0,
+            heading: 0,
+            headingAccuracy: 0,
+            speed: 0,
+            speedAccuracy: 0,
+          );
+        });
+      }
     }
   }
 
@@ -58,7 +117,17 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Peta Kos Terdekat'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Peta Kos Terdekat'),
+            if (_currentPosition != null)
+              Text(
+                'Lat: ${_currentPosition!.latitude.toStringAsFixed(4)}, Lng: ${_currentPosition!.longitude.toStringAsFixed(4)}',
+                style: const TextStyle(fontSize: 10, color: Colors.white70),
+              ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.my_location),
@@ -76,7 +145,36 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ],
       ),
-      body: _useGoogleMaps ? _buildGoogleMapsView() : _buildFallbackMapView(),
+      body: Stack(
+        children: [
+          _useGoogleMaps ? _buildGoogleMapsView() : _buildFallbackMapView(),
+          if (_useGoogleMaps && _currentPosition != null)
+            Positioned(
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  'Jika peta tidak tampil, pastikan API Key Google Maps sudah dikonfigurasi dengan benar.\nLihat file GOOGLE_MAPS_SETUP.md untuk panduan.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _showFilterDialog();
@@ -87,29 +185,50 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildGoogleMapsView() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.map, size: 80, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'Google Maps',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 8),
-          Text('Memerlukan API Key untuk aktivasi'),
-          SizedBox(height: 16),
-          Text(
-            'Untuk mengaktifkan Google Maps:\n'
-            '1. Dapatkan API Key dari Google Cloud Console\n'
-            '2. Tambahkan ke android/app/src/main/AndroidManifest.xml\n'
-            '3. Set _useGoogleMaps = true',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
+    if (_currentPosition == null) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Mendapatkan lokasi...'),
+            SizedBox(height: 8),
+            Text(
+              'Pastikan GPS aktif dan berikan izin lokasi',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+        zoom: 15.0,
       ),
+      onMapCreated: (GoogleMapController controller) {
+        // Map controller ready
+        print('Google Maps controller initialized');
+      },
+      myLocationEnabled: true,
+      myLocationButtonEnabled: true,
+      markers: _buildMarkers(),
+      onTap: (LatLng position) {
+        setState(() {
+          _selectedKos = null;
+        });
+      },
+      // Add map style options
+      mapType: MapType.normal,
+      compassEnabled: true,
+      rotateGesturesEnabled: true,
+      scrollGesturesEnabled: true,
+      tiltGesturesEnabled: true,
+      zoomControlsEnabled: false, // Use custom zoom controls
+      zoomGesturesEnabled: true,
     );
   }
 
@@ -165,16 +284,18 @@ class _MapScreenState extends State<MapScreen> {
               ],
             ),
             child: TextField(
+              enabled: false, // Disable search functionality
               decoration: const InputDecoration(
-                hintText: 'Cari lokasi...',
-                prefixIcon: Icon(Icons.search),
+                hintText: 'Pencarian dinonaktifkan (mode demo)',
+                prefixIcon: Icon(Icons.search, color: Colors.grey),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(vertical: 15),
+                hintStyle: TextStyle(color: Colors.grey),
               ),
               onSubmitted: (value) {
                 ScaffoldMessenger.of(
                   context,
-                ).showSnackBar(SnackBar(content: Text('Mencari: $value')));
+                ).showSnackBar(const SnackBar(content: Text('Pencarian dinonaktifkan')));
               },
             ),
           ),
@@ -263,6 +384,71 @@ class _MapScreenState extends State<MapScreen> {
         ),
       ],
     );
+  }
+
+  Set<Marker> _buildMarkers() {
+    Set<Marker> markers = {};
+
+    // Add current location marker
+    if (_currentPosition != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('current_location'),
+          position: LatLng(
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+          ),
+          infoWindow: const InfoWindow(title: 'Lokasi Saya'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        ),
+      );
+    }
+
+    // Add kos markers (dummy data for now)
+    final List<Map<String, dynamic>> dummyKos = [
+      {
+        'id': '1',
+        'name': 'Kos Melati',
+        'lat': _currentPosition?.latitude ?? -6.200000 + 0.001,
+        'lng': _currentPosition?.longitude ?? 106.816666 + 0.001,
+      },
+      {
+        'id': '2',
+        'name': 'Kos Mawar',
+        'lat': _currentPosition?.latitude ?? -6.200000 - 0.001,
+        'lng': _currentPosition?.longitude ?? 106.816666 - 0.001,
+      },
+      {
+        'id': '3',
+        'name': 'Kos Sakura',
+        'lat': _currentPosition?.latitude ?? -6.200000 + 0.002,
+        'lng': _currentPosition?.longitude ?? 106.816666 - 0.002,
+      },
+    ];
+
+    for (var kos in dummyKos) {
+      markers.add(
+        Marker(
+          markerId: MarkerId(kos['id']),
+          position: LatLng(kos['lat'], kos['lng']),
+          infoWindow: InfoWindow(
+            title: kos['name'],
+            snippet: 'Tap untuk detail',
+          ),
+          onTap: () {
+            // Handle marker tap
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Tapped on ${kos['name']}'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    return markers;
   }
 
   List<Widget> _buildKosMarkers() {

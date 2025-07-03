@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../controllers/kos_controller.dart';
 import '../models/kos.dart';
 import 'kos_detail_screen.dart';
+import 'search_wrapper_screen.dart';
 
 class BookmarksScreen extends StatefulWidget {
   const BookmarksScreen({super.key});
@@ -473,7 +474,12 @@ class _BookmarksScreenState extends State<BookmarksScreen>
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SearchWrapperScreen(),
+                ),
+              );
             },
             icon: const Icon(Icons.search),
             label: const Text('Cari Kos'),
