@@ -19,12 +19,34 @@ class KosController extends ChangeNotifier {
   List<Kos> get favoriteKos => _favoriteKos;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
+  int get favoriteCount => _favoriteKos.length;
 
   // Initialize data
   void initializeData() {
     _allKos = sampleKosData;
     _filteredKos = _allKos;
     loadFavorites(); // Load saved favorites from database
+    notifyListeners();
+  }
+
+  void applyCombinedFilters(
+    String query,
+    String type,
+    double minPrice,
+    double maxPrice,
+  ) {
+    _filteredKos = _allKos.where((kos) {
+      final matchesQuery =
+          query.isEmpty ||
+          kos.name.toLowerCase().contains(query.toLowerCase()) ||
+          kos.address.toLowerCase().contains(query.toLowerCase());
+
+      final matchesType = type == 'Semua' || kos.type == type;
+      final matchesPrice = kos.price >= minPrice && kos.price <= maxPrice;
+
+      return matchesQuery && matchesType && matchesPrice;
+    }).toList();
+
     notifyListeners();
   }
 
@@ -119,7 +141,7 @@ class KosController extends ChangeNotifier {
       _favoriteKos = _allKos
           .where((kos) => favoriteIds.contains(kos.id))
           .toList();
-      
+
       notifyListeners();
       debugPrint('Loaded ${_favoriteKos.length} favorites');
     } catch (e) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'controllers/kos_controller.dart';
 import 'controllers/search_controller.dart' as custom;
@@ -13,10 +14,18 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => KosController()),
+        ChangeNotifierProvider(
+          create: (_) => KosController()..initializeData(),
+        ),
         ChangeNotifierProvider(create: (_) => custom.SearchController()),
-        ChangeNotifierProvider(create: (_) => UserController()),
         ChangeNotifierProvider(create: (_) => NotificationController()),
+        ChangeNotifierProxyProvider<KosController, UserController>(
+          create: (_) => UserController(),
+          update: (_, kosController, userController) {
+            userController?.setKosController(kosController);
+            return userController!;
+          },
+        ),
       ],
       child: const BossKostApp(),
     ),
@@ -28,8 +37,17 @@ class BossKostApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Set status bar to be transparent
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
+
     return MaterialApp(
-      title: 'Boss Kost',
+      title: '',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: const SplashScreen(),

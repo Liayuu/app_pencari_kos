@@ -13,4 +13,16 @@ class AppProviders {
       ChangeNotifierProvider(create: (_) => NotificationController()),
     ];
   }
+
+  static List<ChangeNotifierProxyProvider> get proxyProviders {
+    return [
+      ChangeNotifierProxyProvider<KosController, UserController>(
+        create: (_) => UserController(),
+        update: (_, kosController, userController) {
+          userController?.setKosController(kosController);
+          return userController!;
+        },
+      ),
+    ];
+  }
 }

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'kos_controller.dart';
 
 class UserController extends ChangeNotifier {
   String _name = 'John Doe';
   String _email = 'john.doe@email.com';
   String _phone = '+62 812 3456 7890';
   String _profileImagePath = '';
-  int _bookingCount = 1;
-  int _favoriteCount = 3;
+  int _bookingCount = 0;
   bool _isLoggedIn = true;
+  KosController? _kosController;
 
   // Getters
   String get name => _name;
@@ -16,8 +17,14 @@ class UserController extends ChangeNotifier {
   String get phone => _phone;
   String get profileImagePath => _profileImagePath;
   int get bookingCount => _bookingCount;
-  int get favoriteCount => _favoriteCount;
+  int get favoriteCount => _kosController?.favoriteCount ?? 0;
   bool get isLoggedIn => _isLoggedIn;
+
+  // Set KosController reference
+  void setKosController(KosController kosController) {
+    _kosController = kosController;
+    notifyListeners();
+  }
 
   // Update profile methods
   void updateName(String newName) {
@@ -94,7 +101,6 @@ class UserController extends ChangeNotifier {
     _phone = '';
     _profileImagePath = '';
     _bookingCount = 0;
-    _favoriteCount = 0;
     notifyListeners();
   }
 
@@ -124,18 +130,6 @@ class UserController extends ChangeNotifier {
   void incrementBookingCount() {
     _bookingCount++;
     notifyListeners();
-  }
-
-  void incrementFavoriteCount() {
-    _favoriteCount++;
-    notifyListeners();
-  }
-
-  void decrementFavoriteCount() {
-    if (_favoriteCount > 0) {
-      _favoriteCount--;
-      notifyListeners();
-    }
   }
 
   // Load profile from local storage

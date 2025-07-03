@@ -293,9 +293,9 @@ class _MapScreenState extends State<MapScreen> {
                 hintStyle: TextStyle(color: Colors.grey),
               ),
               onSubmitted: (value) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Pencarian dinonaktifkan')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Pencarian dinonaktifkan')),
+                );
               },
             ),
           ),

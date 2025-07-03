@@ -134,13 +134,15 @@ class KosCard extends StatelessWidget {
                         onTap: () async {
                           // Get status before toggle
                           final wasBookmarked = kosController.isFavorite(kos);
-                          
+
                           // Toggle favorite
                           kosController.toggleFavorite(kos);
-                          
+
                           // Wait a bit for state to update
-                          await Future.delayed(const Duration(milliseconds: 100));
-                          
+                          await Future.delayed(
+                            const Duration(milliseconds: 100),
+                          );
+
                           // Show feedback with correct message
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -151,7 +153,9 @@ class KosCard extends StatelessWidget {
                                       : 'Ditambahkan ke bookmark',
                                 ),
                                 duration: const Duration(seconds: 1),
-                                backgroundColor: wasBookmarked ? Colors.orange : Colors.green,
+                                backgroundColor: wasBookmarked
+                                    ? Colors.orange
+                                    : Colors.green,
                               ),
                             );
                           }
@@ -170,8 +174,12 @@ class KosCard extends StatelessWidget {
                             ],
                           ),
                           child: Icon(
-                            isFavorited ? Icons.bookmark : Icons.bookmark_border,
-                            color: isFavorited ? Colors.red : const Color(0xFF1976D2),
+                            isFavorited
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                            color: isFavorited
+                                ? Colors.red
+                                : const Color(0xFF1976D2),
                             size: 20,
                           ),
                         ),

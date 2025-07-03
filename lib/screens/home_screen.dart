@@ -17,12 +17,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Boss Kost'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        actions: MenuButtons.homeAppBarActions(context),
-      ),
       drawer: const AdvancedDrawer(),
       body: Consumer<UserController>(
         builder: (context, userController, child) {
@@ -117,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: _buildStatCard(
             'Total Kos',
-            '15', // Static data for now
+            '0', // Static data for now
             Icons.home_work,
             Colors.blue,
           ),
