@@ -39,6 +39,7 @@ dependencies:
   http: ^1.2.0
   geolocator: ^14.0.1
   provider: ^6.1.1
+  google_fonts: ^6.1.0
   
   # Database
   sqflite: ^2.3.0

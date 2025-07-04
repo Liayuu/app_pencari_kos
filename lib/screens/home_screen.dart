@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../widgets/advanced_drawer.dart';
 import '../widgets/menu_buttons.dart';
 import '../controllers/user_controller.dart';
+import '../controllers/kos_controller.dart';
 import 'search_wrapper_screen.dart';
 import 'bookmarks_wrapper_screen.dart';
+import '../widgets/kos_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,19 +17,66 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const AdvancedDrawer(),
-      body: Consumer<UserController>(
-        builder: (context, userController, child) {
+      key: _scaffoldKey,
+      endDrawer: const AdvancedDrawer(),
+      body: Consumer2<UserController, KosController>(
+        builder: (context, userController, kosController, child) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header Row: BOSS KOST + Notif + Drawer
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'BOSS KOST',
+                      style: GoogleFonts.poppins(
+                        textStyle: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.notifications_none_rounded,
+                            size: 28,
+                          ),
+                          onPressed: () {
+                            // TODO: Navigasi ke notifikasi jika ada
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.menu, size: 28),
+                          onPressed: () {
+                            _scaffoldKey.currentState?.openEndDrawer();
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
                 // Welcome Section
                 _buildWelcomeSection(userController),
+
+                const SizedBox(height: 20),
+
+                // Search Bar
+                _buildSearchBar(kosController),
 
                 const SizedBox(height: 20),
 
@@ -40,8 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 20),
 
-                // Featured Kos
-                _buildFeaturedKos(),
+                // Daftar Kos (Featured)
+                _buildKosList(kosController),
               ],
             ),
           );
@@ -102,6 +152,21 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSearchBar(KosController kosController) {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: 'Cari kos, alamat, atau fasilitas...',
+        prefixIcon: const Icon(Icons.search),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+      onChanged: (value) {
+        kosController.searchKos(value);
+      },
     );
   }
 
@@ -264,55 +329,38 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildFeaturedKos() {
+  Widget _buildKosList(KosController kosController) {
+    final kosList = kosController.filteredKos;
+    if (kosList.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(child: Text('Tidak ada kos ditemukan.')),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Kos Pilihan',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SearchWrapperScreen(),
-                  ),
-                );
-              },
-              child: const Text('Lihat Semua'),
-            ),
-          ],
+        const Text(
+          'Rekomendasi Kos',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        Container(
-          height: 200,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.home_work, size: 48, color: Colors.grey),
-                SizedBox(height: 8),
-                Text(
-                  'Kos Pilihan',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                Text(
-                  'Fitur akan segera tersedia',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: kosList.length > 5 ? 5 : kosList.length,
+          itemBuilder: (context, index) {
+            final kos = kosList[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: KosCard(
+                kos: kos,
+                onTap: () {
+                  // Navigasi ke detail kos jika ada
+                },
+              ),
+            );
+          },
         ),
       ],
     );

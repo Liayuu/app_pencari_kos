@@ -307,20 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildStatItem(
-                              'Bookmark',
-                              userController.favoriteCount.toString(),
-                            ),
-                            _buildStatItem(
-                              'Booking',
-                              userController.bookingCount.toString(),
-                            ),
-                            _buildStatItem('Poin', '1,250'),
-                          ],
-                        ),
+                        // Card statistik Bookmark, Booking, Poin dihilangkan sesuai permintaan
                       ],
                     ),
                   ),
@@ -365,28 +352,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                         const SizedBox(height: 32),
 
-                        // Statistics Cards
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildStatCard(
-                                userController.favoriteCount.toString(),
-                                'Kos Disimpan',
-                                Icons.bookmark,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildStatCard(
-                                userController.bookingCount.toString(),
-                                'Booking Aktif',
-                                Icons.home,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 32),
+                        // Statistics Cards (dihilangkan sesuai permintaan)
+                        // const SizedBox(height: 32),
 
                         // Menu Items
                         const Text(

@@ -372,23 +372,7 @@ class _AdvancedDrawerState extends State<AdvancedDrawer>
                 // Stats Row
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildStatCard(
-                        'Bookmark',
-                        userController.favoriteCount.toString(),
-                        Icons.bookmark,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildStatCard(
-                        'Booking',
-                        userController.bookingCount.toString(),
-                        Icons.book_online,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildStatCard('Poin', '1,250', Icons.stars),
-                    ],
-                  ),
+                  child: Row(children: []),
                 ),
               ],
             ),
