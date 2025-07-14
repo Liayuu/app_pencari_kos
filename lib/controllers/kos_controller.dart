@@ -113,23 +113,17 @@ class KosController extends ChangeNotifier {
   }
 
   // Favorite management
-  void toggleFavorite(Kos kos) async {
+  Future<void> toggleFavorite(Kos kos) async {
     try {
       if (_favoriteKos.any((k) => k.id == kos.id)) {
-        _favoriteKos.removeWhere((k) => k.id == kos.id);
-        // Notify immediately for UI update
-        notifyListeners();
-        // Remove from SQLite (background)
         await _databaseHelper.removeFavorite(kos.id);
       } else {
-        _favoriteKos.add(kos);
-        // Notify immediately for UI update
-        notifyListeners();
-        // Add to SQLite (background)
         await _databaseHelper.addFavorite(kos.id);
       }
+      await loadFavorites(); // Selalu refresh dari database dan notify UI
     } catch (e) {
       debugPrint('Error toggling favorite: $e');
+      // Tetap notify agar UI bisa menampilkan error jika perlu
       notifyListeners();
     }
   }

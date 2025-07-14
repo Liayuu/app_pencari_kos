@@ -3,14 +3,14 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+class OsmMapScreen extends StatefulWidget {
+  const OsmMapScreen({Key? key}) : super(key: key);
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<OsmMapScreen> createState() => _OsmMapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _OsmMapScreenState extends State<OsmMapScreen> {
   LatLng? _currentPosition;
   late final MapController _mapController;
   Stream<Position>? _positionStream;

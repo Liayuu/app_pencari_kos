@@ -57,6 +57,8 @@ dependencies:
   dio: ^5.4.0
   retrofit: ^4.0.3
   json_annotation: ^4.8.1
+  flutter_map: ^6.0.0
+  latlong2: ^0.9.1
 
 dev_dependencies:
   flutter_test:

@@ -60,6 +60,10 @@ class _BookmarksScreenState extends State<BookmarksScreen>
 
     _listAnimationController.forward();
     _fabAnimationController.forward();
+
+    Future.microtask(() {
+      Provider.of<KosController>(context, listen: false).loadFavorites();
+    });
   }
 
   @override

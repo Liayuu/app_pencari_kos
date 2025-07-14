@@ -24,8 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       key: _scaffoldKey,
       endDrawer: const AdvancedDrawer(),
-      body: Consumer2<UserController, KosController>(
-        builder: (context, userController, kosController, child) {
+      body: Consumer<KosController>(
+        builder: (context, kosController, child) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -71,7 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
 
                 // Welcome Section
-                _buildWelcomeSection(userController),
+                _buildWelcomeSection(
+                  Provider.of<UserController>(context, listen: false),
+                ),
 
                 const SizedBox(height: 20),
 
@@ -81,7 +83,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
 
                 // Quick Stats
-                _buildQuickStats(userController),
+                Consumer<KosController>(
+                  builder: (context, kosController, _) =>
+                      _buildQuickStats(kosController),
+                ),
 
                 const SizedBox(height: 20),
 
@@ -170,31 +175,46 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickStats(UserController userController) {
+  Widget _buildQuickStats(KosController kosController) {
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             'Total Kos',
-            '0', // Static data for now
+            kosController.allKos.length.toString(),
             Icons.home_work,
             Colors.blue,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _buildStatCard(
-            'Bookmark',
-            userController.favoriteCount.toString(),
-            Icons.bookmark,
-            Colors.orange,
+          child: GestureDetector(
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BookmarksWrapperScreen(),
+                ),
+              );
+              // Refresh jumlah bookmark setelah kembali
+              await kosController.loadFavorites();
+            },
+            child: _buildStatCard(
+              'Bookmark',
+              kosController.favoriteCount.toString(),
+              Icons.bookmark,
+              Colors.orange,
+            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _buildStatCard(
             'Booking',
-            userController.bookingCount.toString(),
+            Provider.of<UserController>(
+              context,
+              listen: false,
+            ).bookingCount.toString(),
             Icons.book_online,
             Colors.green,
           ),
@@ -330,39 +350,43 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildKosList(KosController kosController) {
-    final kosList = kosController.filteredKos;
-    if (kosList.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
-        child: Center(child: Text('Tidak ada kos ditemukan.')),
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Rekomendasi Kos',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: kosList.length > 5 ? 5 : kosList.length,
-          itemBuilder: (context, index) {
-            final kos = kosList[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: KosCard(
-                kos: kos,
-                onTap: () {
-                  // Navigasi ke detail kos jika ada
-                },
-              ),
-            );
-          },
-        ),
-      ],
+    return Consumer<KosController>(
+      builder: (context, controller, child) {
+        final kosList = controller.filteredKos;
+        if (kosList.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(child: Text('Tidak ada kos ditemukan.')),
+          );
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Rekomendasi Kos',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: kosList.length > 5 ? 5 : kosList.length,
+              itemBuilder: (context, index) {
+                final kos = kosList[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: KosCard(
+                    kos: kos,
+                    onTap: () {
+                      // Navigasi ke detail kos jika ada
+                    },
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
