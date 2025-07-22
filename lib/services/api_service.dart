@@ -1,25 +1,21 @@
 import '../models/kos.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ApiService {
   static const String baseUrl =
-      'https://api.bosskost.com'; // Replace with actual API URL
+      'https://mocki.io/v1/ccbd172d-976a-4916-909f-0b6b124bf4d4';
 
   // Get all kos
   Future<List<Kos>> getAllKos() async {
     try {
-      // For now, return sample data
-      // In real implementation, make HTTP request:
-      // final response = await http.get(Uri.parse('$baseUrl/kos'));
-      // if (response.statusCode == 200) {
-      //   List<dynamic> data = json.decode(response.body);
-      //   return data.map((json) => Kos.fromJson(json)).toList();
-      // } else {
-      //   throw Exception('Failed to load kos data');
-      // }
-
-      // Simulate network delay
-      await Future.delayed(const Duration(seconds: 1));
-      return sampleKosData;
+      final response = await http.get(Uri.parse(baseUrl));
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Kos.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load kos data');
+      }
     } catch (e) {
       throw Exception('Failed to fetch kos data: $e');
     }
